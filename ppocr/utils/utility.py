@@ -58,7 +58,7 @@ def get_check_global_params(mode):
         check_params = check_params + ["test_batch_size_per_card"]
     return check_params
 
-
+# 可以处理的格式检验
 def _check_image_file(path):
     img_end = {"jpg", "bmp", "png", "jpeg", "rgb", "tif", "tiff", "gif", "pdf"}
     return any([path.lower().endswith(e) for e in img_end])
@@ -69,6 +69,7 @@ def get_image_file_list(img_file, infer_list=None):
     if infer_list and not os.path.exists(infer_list):
         raise Exception("not found infer list {}".format(infer_list))
     if infer_list:
+        # 文件记录的图片地址，第一列是图片路径，第二列是标签
         with open(infer_list, "r") as f:
             lines = f.readlines()
         for line in lines:
@@ -81,8 +82,10 @@ def get_image_file_list(img_file, infer_list=None):
 
         img_end = {"jpg", "bmp", "png", "jpeg", "rgb", "tif", "tiff", "gif", "pdf"}
         if os.path.isfile(img_file) and _check_image_file(img_file):
+            # 单张图片
             imgs_lists.append(img_file)
         elif os.path.isdir(img_file):
+            # 目录下所有图片
             for single_file in os.listdir(img_file):
                 file_path = os.path.join(img_file, single_file)
                 if os.path.isfile(file_path) and _check_image_file(file_path):
@@ -118,6 +121,7 @@ def alpha_to_color(img, alpha_color=(255, 255, 255)):
 
 def check_and_read(img_path):
     if os.path.basename(img_path)[-3:].lower() == "gif":
+        # gif 图片
         gif = cv2.VideoCapture(img_path)
         ret, frame = gif.read()
         if not ret:
@@ -125,23 +129,50 @@ def check_and_read(img_path):
             logger.info("Cannot read {}. This gif image maybe corrupted.")
             return None, False
         if len(frame.shape) == 2 or frame.shape[-1] == 1:
+            # gray image
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
         imgvalue = frame[:, :, ::-1]
         return imgvalue, True, False
     elif os.path.basename(img_path)[-3:].lower() == "pdf":
         from paddle.utils import try_import
-
+        # 导入模块
         fitz = try_import("fitz")
         from PIL import Image
 
         imgs = []
+        # 使用PyMuPDF库读取pdf文件
         with fitz.open(img_path) as pdf:
             for pg in range(0, pdf.page_count):
+                # 每一页转换为图片
                 page = pdf[pg]
+                """
+                fitz.Matrix()可以接受两个或四个参数来构造不同的变换矩阵：
+                如果提供两个参数a和d，则创建一个缩放矩阵。
+                如果提供四个参数a, b, c, d，则创建一个通用的2D仿射变换矩阵。
+                参数说明
+                a (float): 水平方向的缩放系数。
+                b (float): 垂直方向的倾斜系数。
+                c (float): 水平方向的倾斜系数。
+                d (float): 垂直方向的缩放系数。
+                e (float): 水平方向的平移量。
+                f (float): 垂直方向的平移量。
+                """
                 mat = fitz.Matrix(2, 2)
+                # 缩放因子为2，即图片大小为原来的1/2
+                # alpha=False表示不包含透明通道
+                """
+                page：这是指PDF中的一页，通常是从Document对象中通过索引得到的页面对象。
+                matrix=None：一个可选参数，用于指定渲染时使用的矩阵。默认情况下，使用的是单位矩阵（即原始大小）。你可以通过设置不同的矩阵来缩放页面。
+                clip=None：一个可选参数，定义了要渲染的区域。如果提供了这个参数，只有该矩形内的内容会被渲染到Pixmap中。
+                alpha=False：一个布尔值，表示是否包含透明通道。如果设为True，则生成的Pixmap将带有Alpha通道。
+                colorspace=None：指定输出的颜色空间。如果不提供，默认会根据页面内容选择颜色空间。
+                alpha cs=None：当alpha=True时，指定透明通道使用的颜色空间。
+                bgcolor=None：背景颜色，默认情况下，使用的是页面的背景色。如果设置了此参数，则会用提供的颜色填充背景。
+                """
                 pm = page.get_pixmap(matrix=mat, alpha=False)
 
                 # if width or height > 2000 pixels, don't enlarge the image
+                # 限制图片大小为2000像素以内
                 if pm.width > 2000 or pm.height > 2000:
                     pm = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
 

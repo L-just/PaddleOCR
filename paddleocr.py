@@ -914,12 +914,15 @@ def main():
         None
     """
     # for cmd
+    # parse_args填充配置参数用的
     args = parse_args(mMain=True)
     image_dir = args.image_dir
     if is_link(image_dir):
+        # 网络下载图片
         download_with_progressbar(image_dir, "tmp.jpg")
         image_file_list = ["tmp.jpg"]
     else:
+        # 本地图片
         image_file_list = get_image_file_list(args.image_dir)
     if len(image_file_list) == 0:
         logger.error("no images find in {}".format(args.image_dir))
@@ -927,12 +930,14 @@ def main():
     if args.type == "ocr":
         engine = PaddleOCR(**(args.__dict__))
     elif args.type == "structure":
+        # 获取对应的引擎模型
         engine = PPStructure(**(args.__dict__))
     else:
         raise NotImplementedError
 
     for img_path in image_file_list:
         img_name = os.path.basename(img_path).split(".")[0]
+        # 输出路径
         logger.info("{}{}{}".format("*" * 10, img_path, "*" * 10))
         if args.type == "ocr":
             result = engine.ocr(
@@ -953,13 +958,16 @@ def main():
                 if args.savefile:
                     if os.path.exists(args.output) is False:
                         os.mkdir(args.output)
+                    # 保存结果到txt文件
                     outfile = args.output + "/" + img_name + ".txt"
                     with open(outfile, "w", encoding="utf-8") as f:
                         f.writelines(lines)
 
         elif args.type == "structure":
+            # 将gif图或者pdf每一页都转换成openCv的图像
             img, flag_gif, flag_pdf = check_and_read(img_path)
             if not flag_gif and not flag_pdf:
+                # 使用openCv自己读取图片
                 img = cv2.imread(img_path)
 
             if args.recovery and args.use_pdf2docx_api and flag_pdf:
