@@ -84,6 +84,10 @@ __all__ = [
 SUPPORT_DET_MODEL = ["DB"]
 SUPPORT_REC_MODEL = ["CRNN", "SVTR_LCNet"]
 BASE_DIR = os.path.expanduser("~/.paddleocr/")
+# 将~扩展到当前用户的主目录路径
+# Linux -> /home/username
+# Windows -> C:\Users\username
+# Mac -> /Users/username
 
 DEFAULT_OCR_MODEL_VERSION = "PP-OCRv4"
 SUPPORT_OCR_MODEL_VERSION = ["PP-OCR", "PP-OCRv2", "PP-OCRv3", "PP-OCRv4"]
@@ -92,6 +96,7 @@ SUPPORT_STRUCTURE_MODEL_VERSION = ["PP-Structure", "PP-StructureV2"]
 MODEL_URLS = {
     "OCR": {
         "PP-OCRv4": {
+            # OCR的文本检测模型
             "det": {
                 "ch": {
                     "url": "https://paddleocr.bj.bcebos.com/PP-OCRv4/chinese/ch_PP-OCRv4_det_infer.tar",
@@ -103,6 +108,7 @@ MODEL_URLS = {
                     "url": "https://paddleocr.bj.bcebos.com/PP-OCRv3/multilingual/Multilingual_PP-OCRv3_det_infer.tar"
                 },
             },
+            # rec 文本识别模型
             "rec": {
                 "ch": {
                     "url": "https://paddleocr.bj.bcebos.com/PP-OCRv4/chinese/ch_PP-OCRv4_rec_infer.tar",
@@ -153,6 +159,7 @@ MODEL_URLS = {
                     "dict_path": "./ppocr/utils/dict/devanagari_dict.txt",
                 },
             },
+            # cls 文本方向识别模型
             "cls": {
                 "ch": {
                     "url": "https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_cls_infer.tar",
@@ -347,10 +354,12 @@ MODEL_URLS = {
                 },
             },
             "layout": {
+                # 英文版面，区分文字、标题、表格、图片以及列表5类
                 "en": {
                     "url": "https://paddleocr.bj.bcebos.com/ppstructure/models/layout/picodet_lcnet_x1_0_fgd_layout_infer.tar",
                     "dict_path": "ppocr/utils/dict/layout_dict/layout_publaynet_dict.txt",
                 },
+                # 中文版面，可以划分为表格、图片、图片标题、表格、表格标题、页眉、脚本、引用、公式10类
                 "ch": {
                     "url": "https://paddleocr.bj.bcebos.com/ppstructure/models/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer.tar",
                     "dict_path": "ppocr/utils/dict/layout_dict/layout_cdla_dict.txt",
@@ -363,7 +372,7 @@ MODEL_URLS = {
 
 def parse_args(mMain=True):
     import argparse
-
+# 初始化参数
     parser = init_args()
     parser.add_help = mMain
     parser.add_argument("--lang", type=str, default="ch")
@@ -377,9 +386,9 @@ def parse_args(mMain=True):
         choices=SUPPORT_OCR_MODEL_VERSION,
         default="PP-OCRv4",
         help="OCR Model version, the current model support list is as follows: "
-        "1. PP-OCRv4/v3 Support Chinese and English detection and recognition model, and direction classifier model"
-        "2. PP-OCRv2 Support Chinese detection and recognition model. "
-        "3. PP-OCR support Chinese detection, recognition and direction classifier and multilingual recognition model.",
+             "1. PP-OCRv4/v3 Support Chinese and English detection and recognition model, and direction classifier model"
+             "2. PP-OCRv2 Support Chinese detection and recognition model. "
+             "3. PP-OCR support Chinese detection, recognition and direction classifier and multilingual recognition model.",
     )
     parser.add_argument(
         "--structure_version",
@@ -387,8 +396,8 @@ def parse_args(mMain=True):
         choices=SUPPORT_STRUCTURE_MODEL_VERSION,
         default="PP-StructureV2",
         help="Model version, the current model support list is as follows:"
-        " 1. PP-Structure Support en table structure model."
-        " 2. PP-StructureV2 Support ch and en table structure model.",
+             " 1. PP-Structure Support en table structure model."
+             " 2. PP-StructureV2 Support ch and en table structure model.",
     )
 
     for action in parser._actions:
@@ -495,7 +504,7 @@ def parse_lang(lang):
     elif lang in devanagari_lang:
         lang = "devanagari"
     assert (
-        lang in MODEL_URLS["OCR"][DEFAULT_OCR_MODEL_VERSION]["rec"]
+            lang in MODEL_URLS["OCR"][DEFAULT_OCR_MODEL_VERSION]["rec"]
     ), "param lang must in {}, but got {}".format(
         MODEL_URLS["OCR"][DEFAULT_OCR_MODEL_VERSION]["rec"].keys(), lang
     )
@@ -509,7 +518,7 @@ def parse_lang(lang):
         det_lang = "ml"
     return lang, det_lang
 
-
+# 获取模型配置
 def get_model_config(type, version, model_type, lang):
     if type == "OCR":
         DEFAULT_MODEL_VERSION = DEFAULT_OCR_MODEL_VERSION
@@ -517,7 +526,7 @@ def get_model_config(type, version, model_type, lang):
         DEFAULT_MODEL_VERSION = DEFAULT_STRUCTURE_MODEL_VERSION
     else:
         raise NotImplementedError
-
+# 获取模型的下载信息
     model_urls = MODEL_URLS[type]
     if version not in model_urls:
         version = DEFAULT_MODEL_VERSION
@@ -617,7 +626,7 @@ class PaddleOCR(predict_system.TextSystem):
         params = parse_args(mMain=False)
         params.__dict__.update(**kwargs)
         assert (
-            params.ocr_version in SUPPORT_OCR_MODEL_VERSION
+                params.ocr_version in SUPPORT_OCR_MODEL_VERSION
         ), "ocr_version must in {}, but get {}".format(
             SUPPORT_OCR_MODEL_VERSION, params.ocr_version
         )
@@ -675,15 +684,15 @@ class PaddleOCR(predict_system.TextSystem):
         self.page_num = params.page_num
 
     def ocr(
-        self,
-        img,
-        det=True,
-        rec=True,
-        cls=True,
-        bin=False,
-        inv=False,
-        alpha_color=(255, 255, 255),
-        slice={},
+            self,
+            img,
+            det=True,
+            rec=True,
+            cls=True,
+            bin=False,
+            inv=False,
+            alpha_color=(255, 255, 255),
+            slice={},
     ):
         """
         OCR with PaddleOCR
@@ -799,7 +808,7 @@ class PPStructure(StructureSystem):
         params = parse_args(mMain=False)
         params.__dict__.update(**kwargs)
         assert (
-            params.structure_version in SUPPORT_STRUCTURE_MODEL_VERSION
+                params.structure_version in SUPPORT_STRUCTURE_MODEL_VERSION
         ), "structure_version must in {}, but get {}".format(
             SUPPORT_STRUCTURE_MODEL_VERSION, params.structure_version
         )
@@ -817,18 +826,22 @@ class PPStructure(StructureSystem):
             params.merge_no_span_structure = False
 
         # init model dir
+        # 文本监测模型
         det_model_config = get_model_config("OCR", params.ocr_version, "det", det_lang)
         params.det_model_dir, det_url = confirm_model_dir_url(
             params.det_model_dir,
             os.path.join(BASE_DIR, "whl", "det", det_lang),
             det_model_config["url"],
         )
+        # 获取模型配置url 文本识别模型
         rec_model_config = get_model_config("OCR", params.ocr_version, "rec", lang)
+        # 配置模型dict路径 和 URL
         params.rec_model_dir, rec_url = confirm_model_dir_url(
             params.rec_model_dir,
             os.path.join(BASE_DIR, "whl", "rec", lang),
             rec_model_config["url"],
         )
+        # 应该是表格识别模型
         table_model_config = get_model_config(
             "STRUCTURE", params.structure_version, "table", table_lang
         )
@@ -837,6 +850,7 @@ class PPStructure(StructureSystem):
             os.path.join(BASE_DIR, "whl", "table"),
             table_model_config["url"],
         )
+        # 这应该是布局监测模型
         layout_model_config = get_model_config(
             "STRUCTURE", params.structure_version, "layout", lang
         )
@@ -868,11 +882,11 @@ class PPStructure(StructureSystem):
         super().__init__(params)
 
     def __call__(
-        self,
-        img,
-        return_ocr_result_in_table=False,
-        img_idx=0,
-        alpha_color=(255, 255, 255),
+            self,
+            img,
+            return_ocr_result_in_table=False,
+            img_idx=0,
+            alpha_color=(255, 255, 255),
     ):
         """
         Performs structure analysis on the input image.
@@ -914,7 +928,8 @@ def main():
         None
     """
     # for cmd
-    # parse_args填充配置参数用的
+    # parse_args填充配置参数用的 命令行参数
+    # mMain=True 代表是主函数，False代表是命令行调用的函数
     args = parse_args(mMain=True)
     image_dir = args.image_dir
     if is_link(image_dir):
@@ -970,10 +985,11 @@ def main():
                 # 使用openCv自己读取图片
                 img = cv2.imread(img_path)
 
+            # 这个是直接使用pdf2docx的api进行转换成docx
             if args.recovery and args.use_pdf2docx_api and flag_pdf:
                 try_import("pdf2docx")
                 from pdf2docx.converter import Converter
-
+                # 但是这个api有点问题，会把图片和表格分开，所以还是用paddleocr的api
                 docx_file = os.path.join(args.output, "{}.docx".format(img_name))
                 cv = Converter(img_path)
                 cv.convert(docx_file)
@@ -995,7 +1011,8 @@ def main():
                     )
                     cv2.imwrite(pdf_img_path, pdf_img)
                     img_paths.append([pdf_img_path, pdf_img])
-
+            # 前面是数据构造过程，下面是模型预测过程
+            # 这里的result是一个列表，每个元素是一个字典，字典中包含了图片的路径，图片的预测结果，以及ocr的结果
             all_res = []
             for index, (new_img_path, img) in enumerate(img_paths):
                 logger.info("processing {}/{} page:".format(index + 1, len(img_paths)))
@@ -1003,13 +1020,17 @@ def main():
                 save_structure_res(result, args.output, img_name, index)
 
                 if args.recovery and result != []:
+                    # 这里是返回图像的三维信息 height, width, channels, 但是_ 标识不接收这个参数, 忽略;
+                    # 对于BGR格式的彩色图像, channels=3, 对于灰度图像, channels=1
                     h, w, _ = img.shape
                     result_cp = deepcopy(result)
+                    # 文本框进行排序
                     result_sorted = sorted_layout_boxes(result_cp, w)
                     all_res += result_sorted
 
             if args.recovery and all_res != []:
                 try:
+                    # 是ocr解析完成后使用docx进行组装的docx文件
                     convert_info_docx(img, all_res, args.output, img_name)
                 except Exception as ex:
                     logger.error(

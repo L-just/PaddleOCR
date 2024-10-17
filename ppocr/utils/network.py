@@ -47,7 +47,7 @@ def download_with_progressbar(url, save_path):
 def _download(url, save_path):
     """
     Download from url, save to path.
-
+    实际的下载流
     url (str): download url
     save_path (str): download to given path
     """
@@ -112,6 +112,7 @@ def maybe_download(model_storage_directory, url):
         print("download {} to {}".format(url, tmp_path))
         os.makedirs(model_storage_directory, exist_ok=True)
         download_with_progressbar(url, tmp_path)
+        # 解压缩流程
         with tarfile.open(tmp_path, "r") as tarObj:
             for member in tarObj.getmembers():
                 filename = None
@@ -137,11 +138,11 @@ def maybe_download_params(model_path):
     download_with_progressbar(url, tmp_path)
     return tmp_path
 
-
+# 是否http请求URL
 def is_link(s):
     return s is not None and s.startswith("http")
 
-
+# 确认模型目录和URL
 def confirm_model_dir_url(model_dir, default_model_dir, default_url):
     url = default_url
     if model_dir is None or is_link(model_dir):

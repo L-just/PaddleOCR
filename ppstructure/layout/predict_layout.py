@@ -36,6 +36,9 @@ logger = get_logger()
 
 
 class LayoutPredictor(object):
+    """
+    LayoutPredictor 布局预测器
+    """
     def __init__(self, args):
         pre_process_list = [
             {"Resize": {"size": [800, 608]}},

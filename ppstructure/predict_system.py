@@ -42,11 +42,12 @@ logger = get_logger()
 
 class StructureSystem(object):
     def __init__(self, args):
+        # 检查模型参数 这里mode = structure
         self.mode = args.mode
-        self.recovery = args.recovery
+        self.recovery = args.recovery  # 是否恢复模型
 
-        self.image_orientation_predictor = None
-        if args.image_orientation:
+        self.image_orientation_predictor = None   # 图像方向预测器
+        if args.image_orientation:   # 如何开启图像方向预测
             import paddleclas
 
             self.image_orientation_predictor = paddleclas.PaddleClas(
@@ -54,7 +55,7 @@ class StructureSystem(object):
             )
 
         if self.mode == "structure":
-            if not args.show_log:
+            if not args.show_log:  # 是否显示日志
                 logger.setLevel(logging.INFO)
             if args.layout == False and args.ocr == True:
                 args.ocr = False
@@ -101,6 +102,7 @@ class StructureSystem(object):
 
         if self.image_orientation_predictor is not None:
             tic = time.time()
+            # 图像方向预测
             cls_result = self.image_orientation_predictor.predict(input_data=img)
             cls_res = next(cls_result)
             angle = cls_res[0]["label_names"][0]
@@ -117,6 +119,7 @@ class StructureSystem(object):
         if self.mode == "structure":
             ori_im = img.copy()
             if self.layout_predictor is not None:
+                # 布局预测
                 layout_res, elapse = self.layout_predictor(img)
                 time_dict["layout"] += elapse
             else:
