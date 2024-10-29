@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -37,6 +38,7 @@ from ppocr.utils.save_load import load_model
 from ppocr.utils.utility import set_seed
 from ppocr.modeling.architectures import apply_to_static
 import tools.program as program
+import tools.naive_sync_bn as naive_sync_bn
 
 dist.get_world_size()
 
@@ -138,7 +140,10 @@ def main(config, device, logger, vdl_writer, seed):
 
     use_sync_bn = config["Global"].get("use_sync_bn", False)
     if use_sync_bn:
-        model = paddle.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        if config["Global"].get("use_npu", False):
+            naive_sync_bn.convert_syncbn(model)
+        else:
+            model = paddle.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         logger.info("convert_sync_batchnorm")
 
     model = apply_to_static(model, config, logger)
@@ -166,6 +171,15 @@ def main(config, device, logger, vdl_writer, seed):
     amp_dtype = config["Global"].get("amp_dtype", "float16")
     amp_custom_black_list = config["Global"].get("amp_custom_black_list", [])
     amp_custom_white_list = config["Global"].get("amp_custom_white_list", [])
+    if os.path.exists(
+        os.path.join(config["Global"]["save_model_dir"], "train_results.json")
+    ):
+        try:
+            os.remove(
+                os.path.join(config["Global"]["save_model_dir"], "train_results.json")
+            )
+        except:
+            pass
     if use_amp:
         AMP_RELATED_FLAGS_SETTING = {
             "FLAGS_max_inplace_grad_add": 8,
