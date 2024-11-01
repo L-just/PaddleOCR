@@ -29,13 +29,13 @@ from paddlehub.module.module import moduleinfo, runnable, serving
 import cv2
 import numpy as np
 import paddlehub as hub
-
+from paddleocr import PPStructure
 from tools.infer.utility import base64_to_cv2
 from ppstructure.predict_system import StructureSystem as PPStructureSystem
 from ppstructure.predict_system import save_structure_res
 from ppstructure.utility import parse_args
 from deploy.hubserving.structure_system.params import read_params
-
+from deploy.hubserving.ocr_system.params import Config
 
 @moduleinfo(
     name="structure_system",
@@ -50,8 +50,8 @@ class StructureSystem(hub.Module):
         """
         initialize with the necessary elements
         """
-        cfg = self.merge_configs()
-
+        # cfg = self.merge_configs()
+        cfg = Config()
         cfg.use_gpu = use_gpu
         if use_gpu:
             try:
@@ -67,7 +67,8 @@ class StructureSystem(hub.Module):
         cfg.ir_optim = True
         cfg.enable_mkldnn = enable_mkldnn
 
-        self.table_sys = PPStructureSystem(cfg)
+        # self.table_sys = PPStructureSystem(cfg)
+        self.table_sys = PPStructure(**cfg.__dict__)
 
     def merge_configs(self):
         # deafult cfg
@@ -114,7 +115,7 @@ class StructureSystem(hub.Module):
             raise TypeError("The input data is inconsistent with expectations.")
 
         assert (
-            predicted_data != []
+                predicted_data != []
         ), "There is not any image to be predicted. Please check the input data."
 
         all_results = []

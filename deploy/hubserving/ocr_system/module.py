@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 import os
 import sys
 
@@ -33,7 +34,8 @@ import paddlehub as hub
 from tools.infer.utility import base64_to_cv2
 from tools.infer.predict_system import TextSystem
 from tools.infer.utility import parse_args
-from deploy.hubserving.ocr_system.params import read_params
+from deploy.hubserving.ocr_system.params import read_params, Config
+from paddleocr import PaddleOCR
 
 
 @moduleinfo(
@@ -49,8 +51,8 @@ class OCRSystem(hub.Module):
         """
         initialize with the necessary elements
         """
-        cfg = self.merge_configs()
-
+        # cfg = self.merge_configs()
+        cfg = Config()
         cfg.use_gpu = use_gpu
         if use_gpu:
             try:
@@ -66,7 +68,8 @@ class OCRSystem(hub.Module):
         cfg.ir_optim = True
         cfg.enable_mkldnn = enable_mkldnn
 
-        self.text_sys = TextSystem(cfg)
+        # self.text_sys = TextSystem(cfg)
+        self.text_sys = PaddleOCR(**cfg.__dict__)
 
     def merge_configs(
         self,
